@@ -1,6 +1,5 @@
 import React from 'react';
 import { LoanProvider, useLoan } from './context/LoanContext';
-import { ToastProvider } from './components/ui/Toast';
 import Stepper from './components/Stepper';
 import Step1Amount from './components/Step1Amount';
 import Step2Schedule from './components/Step2Schedule';
@@ -64,10 +63,8 @@ function LoanFlow(): React.ReactElement {
 
 export default function App(): React.ReactElement {
   return (
-    <ToastProvider>
-      <LoanProvider>
-        <LoanFlow />
-      </LoanProvider>
-    </ToastProvider>
+    <LoanProvider>
+      <LoanFlow />
+    </LoanProvider>
   );
 }
