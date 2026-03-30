@@ -1,0 +1,94 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+@import "tailwindcss";
+
+/* ── Design System Tokens ──────────────────────────────────────────────────── */
+:root {
+  --color-primary:        #1B3A6B;
+  --color-primary-hover:  #2D5BA3;
+  --color-secondary:      #0F6E56;
+  --color-danger:         #E24B4A;
+  --color-warning:        #BA7517;
+  --color-bg:             #F7FAFC;
+  --color-surface:        #FFFFFF;
+  --color-border:         #D0D7E2;
+  --color-text-primary:   #1A202C;
+  --color-text-secondary: #4A5568;
+  --color-text-muted:     #A0AEC0;
+}
+
+/* ── Tailwind v4: Custom color tokens ─────────────────────────────────────── */
+@theme {
+  --color-primary:         #1B3A6B;
+  --color-primary-hover:   #2D5BA3;
+  --color-secondary:       #0F6E56;
+  --color-danger:          #E24B4A;
+  --color-warn:            #BA7517;
+  --color-surface:         #FFFFFF;
+  --color-border-brand:    #D0D7E2;
+  --color-heading:         #1A202C;
+  --color-body:            #4A5568;
+  --color-muted:           #A0AEC0;
+  --color-bg-base:         #F7FAFC;
+  /* Blockchain networks */
+  --color-polygon:         #7B3FE4;
+  --color-polygon-bg:      #F0EBFF;
+  --color-polygon-text:    #7B3FE4;
+  --color-solana:          #0F6E56;
+  --color-solana-bg:       #E6F7EF;
+  --color-solana-text:     #0F6E56;
+}
+
+/* ── Base styles ───────────────────────────────────────────────────────────── */
+* { box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--color-bg);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root { min-height: 100vh; }
+
+/* JetBrains Mono para hashes y código */
+.font-mono {
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+/* ── Animations ────────────────────────────────────────────────────────────── */
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-up               { animation: fade-in-up 0.5s ease forwards; }
+.animate-fade-in-up-delay-1       { animation: fade-in-up 0.5s ease 0.1s forwards; opacity: 0; }
+.animate-fade-in-up-delay-2       { animation: fade-in-up 0.5s ease 0.2s forwards; opacity: 0; }
+.animate-fade-in-up-delay-3       { animation: fade-in-up 0.5s ease 0.3s forwards; opacity: 0; }
+.animate-fade-in-up-delay-4       { animation: fade-in-up 0.5s ease 0.4s forwards; opacity: 0; }
+
+@keyframes check-draw {
+  from { stroke-dashoffset: 60; }
+  to   { stroke-dashoffset: 0; }
+}
+.check-path {
+  stroke-dasharray: 60;
+  stroke-dashoffset: 60;
+  animation: check-draw 0.6s ease 0.3s forwards;
+}
+
+/* ── Skeleton pulse ────────────────────────────────────────────────────────── */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+.animate-skeleton { animation: skeleton-pulse 1.6s ease-in-out infinite; }
+
+/* ── Scrollbar ─────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 4px; }
+::-webkit-scrollbar-track { background: #f1f1f1; }
+::-webkit-scrollbar-thumb { background: #93c5fd; border-radius: 2px; }
+
+/* ── Number input ──────────────────────────────────────────────────────────── */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+input[type=number] { -moz-appearance: textfield; }
