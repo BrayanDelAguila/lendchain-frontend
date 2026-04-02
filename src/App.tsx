@@ -1,17 +1,21 @@
 import React from 'react';
 import { LoanProvider, useLoan } from './context/LoanContext';
-import { ToastProvider } from './components/ui/Toast';
 import Stepper from './components/Stepper';
 import Step1Amount from './components/Step1Amount';
 import Step2Schedule from './components/Step2Schedule';
 import Step3Applicant from './components/Step3Applicant';
 import Step4Contract from './components/Step4Contract';
 import Step5Confirmation from './components/Step5Confirmation';
+import AuthGate from './components/ui/AuthGate';
 
 // ─── Step router ──────────────────────────────────────────────────────────────
 
 function LoanFlow(): React.ReactElement {
-  const { currentStep } = useLoan();
+  const { currentStep, isAuthenticated } = useLoan();
+
+  if (!isAuthenticated) {
+    return <AuthGate onAuth={() => {}} />;
+  }
 
   const steps: Record<number, React.ReactElement> = {
     1: <Step1Amount />,
@@ -64,10 +68,8 @@ function LoanFlow(): React.ReactElement {
 
 export default function App(): React.ReactElement {
   return (
-    <ToastProvider>
-      <LoanProvider>
-        <LoanFlow />
-      </LoanProvider>
-    </ToastProvider>
+    <LoanProvider>
+      <LoanFlow />
+    </LoanProvider>
   );
 }

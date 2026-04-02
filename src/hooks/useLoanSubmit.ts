@@ -4,30 +4,21 @@ import { useLoan } from '../context/LoanContext';
 
 // ─── Payload / Response types ──────────────────────────────────────────────────
 
-interface LoanApplicantPayload {
-  fullName: string;
-  documentId: string;
-  email: string;
-  phone: string;
-  purpose: string;
+interface CreateLoanPayload {
+  amount_usdc: number;
+  term_months: number;
+  annual_rate: number;
+  purpose?: string;
 }
 
-interface LoanPayload {
-  amount: number;
-  term: number;
-  rate: number;
-  applicant: LoanApplicantPayload;
-  signature: string;
-  termsAccepted: boolean;
+interface LoanData {
+  id: string;
+  deploy_tx_hash: string;
+  contract_address: string;
 }
 
 interface LoanResponse {
-  loanId?: string;
-  loan_id?: string;
-  txHash?: string;
-  tx_hash?: string;
-  contractAddress?: string;
-  contract_address?: string;
+  data: LoanData;
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
@@ -39,8 +30,7 @@ interface LoanResponse {
  */
 export function useLoanSubmit() {
   const {
-    amount, term, applicant,
-    signature, termsAccepted, RATE,
+    amount, term, applicant, RATE,
     setLoanId, setTxHash, setContractAddress,
   } = useLoan();
 
@@ -48,19 +38,11 @@ export function useLoanSubmit() {
     mutationKey: ['submitLoan'],
 
     mutationFn: async () => {
-      const payload: LoanPayload = {
-        amount: parseFloat(amount),
-        term: parseInt(String(term), 10),
-        rate: RATE,
-        applicant: {
-          fullName: applicant.fullName,
-          documentId: applicant.documentId,
-          email: applicant.email,
-          phone: applicant.phone,
-          purpose: applicant.purpose,
-        },
-        signature,
-        termsAccepted,
+      const payload: CreateLoanPayload = {
+        amount_usdc: parseFloat(amount),
+        term_months: parseInt(String(term), 10),
+        annual_rate: RATE,
+        purpose: applicant.purpose || undefined,
       };
 
       const { data } = await api.post<LoanResponse>('/api/v1/loans', payload);
@@ -68,9 +50,9 @@ export function useLoanSubmit() {
     },
 
     onSuccess: (data) => {
-      setLoanId(data.loanId ?? data.loan_id ?? '');
-      setTxHash(data.txHash ?? data.tx_hash ?? '');
-      setContractAddress(data.contractAddress ?? data.contract_address ?? '');
+      setLoanId(data.data.id);
+      setTxHash(data.data.deploy_tx_hash);
+      setContractAddress(data.data.contract_address);
     },
   });
 }
