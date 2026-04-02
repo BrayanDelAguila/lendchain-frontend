@@ -6,11 +6,16 @@ import Step2Schedule from './components/Step2Schedule';
 import Step3Applicant from './components/Step3Applicant';
 import Step4Contract from './components/Step4Contract';
 import Step5Confirmation from './components/Step5Confirmation';
+import AuthGate from './components/ui/AuthGate';
 
 // ─── Step router ──────────────────────────────────────────────────────────────
 
 function LoanFlow(): React.ReactElement {
-  const { currentStep } = useLoan();
+  const { currentStep, isAuthenticated } = useLoan();
+
+  if (!isAuthenticated) {
+    return <AuthGate onAuth={() => {}} />;
+  }
 
   const steps: Record<number, React.ReactElement> = {
     1: <Step1Amount />,

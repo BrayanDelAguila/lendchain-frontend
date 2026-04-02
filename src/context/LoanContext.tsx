@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
+import api from '../services/api';
 
 // ─── Domain types ──────────────────────────────────────────────────────────────
 
@@ -23,6 +24,11 @@ export interface ScheduleItem {
 // ─── Context type ──────────────────────────────────────────────────────────────
 
 export interface LoanContextType {
+  // Auth
+  accessToken: string;
+  isAuthenticated: boolean;
+  loginOrRegister: (email: string, password: string) => Promise<void>;
+
   // Navigation
   currentStep: number;
   goNext: () => void;
@@ -68,6 +74,26 @@ const LoanContext = createContext<LoanContextType | null>(null);
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
 export function LoanProvider({ children }: { children: React.ReactNode }) {
+  const [accessToken, setAccessToken] = useState<string>(() => localStorage.getItem('lendchain_jwt') ?? '');
+  const isAuthenticated = accessToken.length > 0;
+
+  const loginOrRegister = async (email: string, password: string): Promise<void> => {
+    let token: string;
+    try {
+      const { data } = await api.post<{ data: { access_token: string } }>('/api/v1/users/login', { email, password });
+      token = data.data.access_token;
+    } catch {
+      const { data } = await api.post<{ data: { access_token: string } }>('/api/v1/users/register', {
+        email,
+        password,
+        full_name: email.split('@')[0],
+      });
+      token = data.data.access_token;
+    }
+    localStorage.setItem('lendchain_jwt', token);
+    setAccessToken(token);
+  };
+
   const [currentStep, setCurrentStep] = useState<number>(1);
 
   const [amount, setAmount] = useState<string>('');
@@ -136,6 +162,7 @@ export function LoanProvider({ children }: { children: React.ReactNode }) {
   const totalInterest = totalPayment - parseFloat(amount || '0');
 
   const value: LoanContextType = {
+    accessToken, isAuthenticated, loginOrRegister,
     currentStep, goNext, goBack, goToStart,
     amount, setAmount,
     term, setTerm,

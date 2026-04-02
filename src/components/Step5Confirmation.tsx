@@ -30,7 +30,8 @@ export default function Step5Confirmation(): React.ReactElement {
   }, [isError, error, toast]);
 
   const shortHash = txHash ? `${txHash.slice(0, 6)}...${txHash.slice(-4)}` : '';
-  const polygonscanUrl = txHash ? `https://mumbai.polygonscan.com/tx/${txHash}` : '#';
+  const isRealHash = txHash.startsWith('0x') && txHash.length === 66 && !txHash.startsWith('0x_stub');
+  const polygonscanUrl = `https://mumbai.polygonscan.com/tx/${txHash}`;
 
   return (
     <div className="px-4 pb-8 text-center">
@@ -104,13 +105,19 @@ export default function Step5Confirmation(): React.ReactElement {
               </div>
             </div>
             {txHash && (
-              <a id="polygonscan-link" href={polygonscanUrl} target="_blank" rel="noopener noreferrer"
-                className="mt-3 flex items-center gap-2 text-xs text-primary font-semibold hover:text-primary-hover transition-colors">
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
-                Ver en Polygonscan (Mumbai Testnet)
-              </a>
+              isRealHash ? (
+                <a id="polygonscan-link" href={polygonscanUrl} target="_blank" rel="noopener noreferrer"
+                  className="mt-3 flex items-center gap-2 text-xs text-primary font-semibold hover:text-primary-hover transition-colors">
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                  Ver en Polygonscan (Mumbai Testnet)
+                </a>
+              ) : (
+                <p className="mt-3 inline-flex items-center gap-1.5 text-xs text-muted font-medium px-2 py-1 rounded-full bg-border-brand">
+                  <span>⚠</span> Hash de simulación — bytecode pendiente de compilar
+                </p>
+              )
             )}
           </div>
         )}
