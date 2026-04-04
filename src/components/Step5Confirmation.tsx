@@ -11,11 +11,23 @@ export default function Step5Confirmation(): React.ReactElement {
   const { mutate: submitLoan, isPending, isError, error } = useLoanSubmit();
   const called = useRef(false);
 
-  // Fire mutation once on mount
+  // Fire mutation once on mount — with 35s safety timeout
   useEffect(() => {
     if (called.current) return;
     called.current = true;
+
+    const timeoutId = setTimeout(() => {
+      if (isPending) {
+        toast.error(
+          'Tiempo de espera agotado',
+          'El servidor no respondió. Verifica tu conexión e intenta de nuevo.'
+        );
+      }
+    }, 35_000);
+
     submitLoan();
+
+    return () => clearTimeout(timeoutId);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -32,7 +44,7 @@ export default function Step5Confirmation(): React.ReactElement {
   const shortHash = txHash ? `${txHash.slice(0, 6)}...${txHash.slice(-4)}` : '';
   const isRealHash = txHash.startsWith('0x') && txHash.length === 66 && !txHash.startsWith('0x_stub');
   const polygonscanUrl = isRealHash
-    ? `https://mumbai.polygonscan.com/tx/${txHash}`
+    ? `https://amoy.polygonscan.com/tx/${txHash}`
     : null;
 
   return (
@@ -69,6 +81,27 @@ export default function Step5Confirmation(): React.ReactElement {
         </div>
         {!isPending && <NetworkBadge network="polygon" />}
       </div>
+
+      {/* Error state */}
+      {isError && (
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-4 text-left mb-4 animate-fade-in-up">
+          <p className="text-sm font-semibold text-red-700 mb-1">
+            No se pudo registrar la solicitud
+          </p>
+          <p className="text-xs text-red-600">
+            {(error as { message?: string })?.message ?? 'Error desconocido. Intenta de nuevo.'}
+          </p>
+          <button
+            onClick={() => {
+              called.current = false;
+              submitLoan();
+            }}
+            className="mt-3 text-xs font-semibold text-red-700 underline hover:text-red-900"
+          >
+            Reintentar
+          </button>
+        </div>
+      )}
 
       {/* Info cards */}
       <div className="space-y-3 mb-6 animate-fade-in-up-delay-3">
