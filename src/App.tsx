@@ -41,7 +41,18 @@ function LoanFlow(): React.ReactElement {
               <p className="text-xs text-muted leading-none">P2P · Blockchain</p>
             </div>
           </div>
-          <div className="text-xs text-muted font-medium">Paso {currentStep} de 5</div>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-muted font-medium">Paso {currentStep} de 5</span>
+            <button
+              onClick={() => {
+                localStorage.removeItem('lendchain_jwt');
+                window.location.reload();
+              }}
+              className="text-xs text-muted hover:text-body transition-colors"
+            >
+              Salir
+            </button>
+          </div>
         </div>
         <Stepper />
       </header>

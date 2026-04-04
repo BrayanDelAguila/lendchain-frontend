@@ -32,7 +32,7 @@ export default function Step5Confirmation(): React.ReactElement {
   const shortHash = txHash ? `${txHash.slice(0, 6)}...${txHash.slice(-4)}` : '';
   const isRealHash = txHash.startsWith('0x') && txHash.length === 66 && !txHash.startsWith('0x_stub');
   const polygonscanUrl = isRealHash
-    ? `https://mumbai.polygonscan.com/tx/${txHash}`
+    ? `https://amoy.polygonscan.com/tx/${txHash}`
     : null;
 
   return (

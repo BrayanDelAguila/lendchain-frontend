@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
-import api from '../services/api';
+import api, { ApiError } from '../services/api';
 
 // ─── Domain types ──────────────────────────────────────────────────────────────
 
@@ -78,20 +78,38 @@ export function LoanProvider({ children }: { children: React.ReactNode }) {
   const isAuthenticated = accessToken.length > 0;
 
   const loginOrRegister = async (email: string, password: string): Promise<void> => {
-    let token: string;
     try {
-      const { data } = await api.post<{ data: { access_token: string } }>('/api/v1/users/login', { email, password });
-      token = data.data.access_token;
-    } catch {
-      const { data } = await api.post<{ data: { access_token: string } }>('/api/v1/users/register', {
-        email,
-        password,
-        full_name: email.split('@')[0],
-      });
-      token = data.data.access_token;
+      const { data } = await api.post<{ data: { access_token: string } }>(
+        '/api/v1/users/login', { email, password }
+      );
+      const token = data.data.access_token;
+      localStorage.setItem('lendchain_jwt', token);
+      setAccessToken(token);
+    } catch (loginErr: unknown) {
+      const loginError = loginErr as ApiError;
+      if (loginError.code === 'UNAUTHORIZED' || loginError.code?.startsWith('HTTP_401')) {
+        try {
+          const { data } = await api.post<{ data: { access_token: string } }>(
+            '/api/v1/users/register', {
+              email,
+              password,
+              full_name: email.split('@')[0],
+            }
+          );
+          const token = data.data.access_token;
+          localStorage.setItem('lendchain_jwt', token);
+          setAccessToken(token);
+        } catch (registerErr: unknown) {
+          const regError = registerErr as ApiError;
+          if (regError.code === 'VALIDATION_ERROR' || regError.code?.startsWith('HTTP_422')) {
+            throw { code: 'WRONG_PASSWORD', message: 'Contraseña incorrecta. Intenta de nuevo.' } as ApiError;
+          }
+          throw regError;
+        }
+      } else {
+        throw loginErr;
+      }
     }
-    localStorage.setItem('lendchain_jwt', token);
-    setAccessToken(token);
   };
 
   const [currentStep, setCurrentStep] = useState<number>(1);
