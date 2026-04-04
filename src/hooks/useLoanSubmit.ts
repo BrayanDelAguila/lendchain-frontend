@@ -54,5 +54,9 @@ export function useLoanSubmit() {
       setTxHash(data.data.deploy_tx_hash);
       setContractAddress(data.data.contract_address);
     },
+
+    onError: (error: ApiError) => {
+      console.error('[useLoanSubmit] error:', error);
+    },
   });
 }
