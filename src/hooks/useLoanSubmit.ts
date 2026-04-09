@@ -26,7 +26,7 @@ interface LoanResponse {
 /**
  * useLoanSubmit — wraps `POST /api/v1/loans` with React Query useMutation.
  * On success, stores loanId / txHash / contractAddress in LoanContext.
- * isPending from the mutation drives the loading UI in Step5.
+ * Returns the full mutation object including `data` for direct use in Step5.
  */
 export function useLoanSubmit() {
   const {
@@ -34,7 +34,7 @@ export function useLoanSubmit() {
     setLoanId, setTxHash, setContractAddress,
   } = useLoan();
 
-  return useMutation<LoanResponse, ApiError, void>({
+  const mutation = useMutation<LoanResponse, ApiError, void>({
     mutationKey: ['submitLoan'],
 
     mutationFn: async () => {
@@ -50,6 +50,7 @@ export function useLoanSubmit() {
     },
 
     onSuccess: (data) => {
+      // Actualizar contexto para otros componentes
       setLoanId(data.data.id);
       setTxHash(data.data.deploy_tx_hash);
       setContractAddress(data.data.contract_address);
@@ -59,4 +60,6 @@ export function useLoanSubmit() {
       console.error('[useLoanSubmit] error:', error);
     },
   });
+
+  return mutation; // retornar la mutación completa incluyendo data
 }
