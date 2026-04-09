@@ -92,12 +92,14 @@ api.interceptors.response.use(
       }
 
       try {
-        const { data } = await api.post<{ data: { access_token: string } }>(
+        const { data } = await api.post<{ data: { access_token: string; refresh_token: string } }>(
           '/api/v1/users/refresh',
           { refresh_token: refreshToken }
         );
         const newToken = data.data.access_token;
+        const newRefreshToken = data.data.refresh_token;
         localStorage.setItem('lendchain_jwt', newToken);
+        localStorage.setItem('lendchain_refresh_token', newRefreshToken);
         api.defaults.headers.common.Authorization = `Bearer ${newToken}`;
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
         processQueue(null, newToken);
