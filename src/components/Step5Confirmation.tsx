@@ -8,28 +8,14 @@ import { SkeletonTxCard, SkeletonLine } from './ui/Skeleton';
 export default function Step5Confirmation(): React.ReactElement {
   const { loanId, txHash, contractAddress, goToStart, applicant } = useLoan();
   const { toast } = useToast();
-  const { mutate: submitLoan, isPending, isError, error } = useLoanSubmit();
+  const { mutate: submitLoan, isPending, isError, isSuccess, error } = useLoanSubmit();
   const called = useRef(false);
 
-  // Fire mutation once on mount — with 35s safety timeout
   useEffect(() => {
     if (called.current) return;
     called.current = true;
-
-    const timeoutId = setTimeout(() => {
-      if (isPending) {
-        toast.error(
-          'Tiempo de espera agotado',
-          'El servidor no respondió. Verifica tu conexión e intenta de nuevo.'
-        );
-      }
-    }, 35_000);
-
     submitLoan();
-
-    return () => clearTimeout(timeoutId);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, []); // Solo una vez al montar
 
   // Show toast on error
   useEffect(() => {
@@ -41,84 +27,52 @@ export default function Step5Confirmation(): React.ReactElement {
     }
   }, [isError, error, toast]);
 
-  const shortHash = txHash ? `${txHash.slice(0, 6)}...${txHash.slice(-4)}` : '';
+  // Wait for context to be populated with real backend data
+  const isComplete = isSuccess && loanId !== '';
   const isRealHash = txHash.startsWith('0x') && txHash.length === 66 && !txHash.startsWith('0x_stub');
-  const polygonscanUrl = isRealHash
-    ? `https://amoy.polygonscan.com/tx/${txHash}`
-    : null;
+  const polygonscanUrl = isRealHash ? `https://amoy.polygonscan.com/tx/${txHash}` : null;
+  const shortHash = txHash ? `${txHash.slice(0, 6)}...${txHash.slice(-4)}` : '';
 
-  return (
-    <div className="px-4 pb-8 text-center">
-      {/* Success icon */}
-      <div className="flex flex-col items-center mb-8 animate-fade-in-up">
-        <div className="relative mb-5">
-          <div className="absolute inset-0 rounded-full bg-secondary opacity-20 animate-ping" />
-          <div className="relative w-24 h-24 bg-secondary rounded-full flex items-center justify-center shadow-2xl">
-            <svg className="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" className="check-path" d="M5 13l4 4L19 7" />
-            </svg>
+  // ─── Success screen ────────────────────────────────────────────────────────
+
+  if (isComplete) {
+    return (
+      <div className="px-4 pb-8 text-center">
+        {/* Success icon */}
+        <div className="flex flex-col items-center mb-8 animate-fade-in-up">
+          <div className="relative mb-5">
+            <div className="absolute inset-0 rounded-full bg-secondary opacity-20 animate-ping" />
+            <div className="relative w-24 h-24 bg-secondary rounded-full flex items-center justify-center shadow-2xl">
+              <svg className="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" className="check-path" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
           </div>
-        </div>
-        <h2 className="text-3xl font-bold text-heading mb-2 animate-fade-in-up-delay-1">
-          {isPending ? 'Procesando…' : '¡Solicitud enviada!'}
-        </h2>
-        <p className="text-body text-sm max-w-xs animate-fade-in-up-delay-2">
-          {isPending
-            ? 'Registrando tu contrato en la blockchain de Polygon…'
-            : 'Tu solicitud ha sido registrada exitosamente en la blockchain de Polygon.'}
-        </p>
-      </div>
-
-      {/* Status badge */}
-      <div className="flex items-center justify-center gap-2 mb-6 animate-fade-in-up-delay-2">
-        <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold border
-          ${isPending
-            ? 'bg-primary/5 border-primary/20 text-primary'
-            : 'bg-warn/10 border-warn/30 text-warn'
-          }`}>
-          <div className={`w-2 h-2 rounded-full animate-pulse ${isPending ? 'bg-primary' : 'bg-warn'}`} />
-          {isPending ? 'Enviando a blockchain…' : 'Estado: En revisión'}
-        </div>
-        {!isPending && <NetworkBadge network="polygon" />}
-      </div>
-
-      {/* Error state */}
-      {isError && (
-        <div className="bg-red-50 border border-red-200 rounded-2xl p-4 text-left mb-4 animate-fade-in-up">
-          <p className="text-sm font-semibold text-red-700 mb-1">
-            No se pudo registrar la solicitud
+          <h2 className="text-3xl font-bold text-heading mb-2 animate-fade-in-up-delay-1">¡Solicitud enviada!</h2>
+          <p className="text-body text-sm max-w-xs animate-fade-in-up-delay-2">
+            Tu solicitud ha sido registrada exitosamente en la blockchain de Polygon.
           </p>
-          <p className="text-xs text-red-600">
-            {(error as { message?: string })?.message ?? 'Error desconocido. Intenta de nuevo.'}
-          </p>
-          <button
-            onClick={() => {
-              called.current = false;
-              submitLoan();
-            }}
-            className="mt-3 text-xs font-semibold text-red-700 underline hover:text-red-900"
-          >
-            Reintentar
-          </button>
-        </div>
-      )}
-
-      {/* Info cards */}
-      <div className="space-y-3 mb-6 animate-fade-in-up-delay-3">
-
-        {/* Loan ID */}
-        <div className="bg-surface border border-border-brand rounded-2xl p-4 text-left shadow-sm">
-          <p className="text-xs text-muted font-medium mb-1 uppercase tracking-wide">Número de solicitud</p>
-          {isPending
-            ? <SkeletonLine width="w-40" height="h-6" className="mt-1" />
-            : <p className="text-xl font-bold text-heading tracking-wide font-mono">{loanId || '—'}</p>
-          }
         </div>
 
-        {/* TX Hash — skeleton while loading */}
-        {isPending ? (
-          <SkeletonTxCard />
-        ) : (
+        {/* Status badge */}
+        <div className="flex items-center justify-center gap-2 mb-6 animate-fade-in-up-delay-2">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold border bg-warn/10 border-warn/30 text-warn">
+            <div className="w-2 h-2 rounded-full animate-pulse bg-warn" />
+            Estado: En revisión
+          </div>
+          <NetworkBadge network="polygon" />
+        </div>
+
+        {/* Info cards */}
+        <div className="space-y-3 mb-6 animate-fade-in-up-delay-3">
+
+          {/* Loan ID */}
+          <div className="bg-surface border border-border-brand rounded-2xl p-4 text-left shadow-sm">
+            <p className="text-xs text-muted font-medium mb-1 uppercase tracking-wide">Número de solicitud</p>
+            <p className="text-xl font-bold text-heading tracking-wide font-mono">{loanId}</p>
+          </div>
+
+          {/* TX Hash */}
           <div className="bg-surface border border-border-brand rounded-2xl p-4 text-left shadow-sm">
             <div className="flex items-start justify-between gap-2">
               <div className="flex-1 min-w-0">
@@ -126,7 +80,7 @@ export default function Step5Confirmation(): React.ReactElement {
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                   </svg>
-                  Hash de transacción · Polygon Mumbai
+                  Hash de transacción · Polygon Amoy
                 </p>
                 <p className="text-base font-mono font-bold text-primary break-all">{shortHash || '—'}</p>
                 {txHash && <p className="text-xs text-muted font-mono mt-1 truncate">{txHash}</p>}
@@ -146,7 +100,7 @@ export default function Step5Confirmation(): React.ReactElement {
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                   </svg>
-                  Ver en Polygonscan (Mumbai Testnet)
+                  Ver en Polygonscan (Amoy Testnet)
                 </a>
               ) : (
                 <p className="mt-3 inline-flex items-center gap-1.5 text-xs text-muted font-medium px-2 py-1 rounded-full bg-border-brand">
@@ -155,18 +109,16 @@ export default function Step5Confirmation(): React.ReactElement {
               )
             )}
           </div>
-        )}
 
-        {/* Contract address */}
-        {!isPending && contractAddress && (
-          <div className="bg-surface border border-border-brand rounded-2xl p-4 text-left shadow-sm">
-            <p className="text-xs text-muted font-medium mb-1 uppercase tracking-wide">Contrato desplegado</p>
-            <p className="text-xs font-mono font-semibold break-all" style={{ color: '#7B3FE4' }}>{contractAddress}</p>
-          </div>
-        )}
+          {/* Contract address */}
+          {contractAddress && (
+            <div className="bg-surface border border-border-brand rounded-2xl p-4 text-left shadow-sm">
+              <p className="text-xs text-muted font-medium mb-1 uppercase tracking-wide">Contrato desplegado</p>
+              <p className="text-xs font-mono font-semibold break-all" style={{ color: '#7B3FE4' }}>{contractAddress}</p>
+            </div>
+          )}
 
-        {/* What's next */}
-        {!isPending && (
+          {/* What's next */}
           <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 text-left">
             <p className="text-xs text-primary font-semibold uppercase tracking-wide mb-2">¿Qué sigue?</p>
             <div className="space-y-2">
@@ -184,16 +136,100 @@ export default function Step5Confirmation(): React.ReactElement {
               ))}
             </div>
           </div>
-        )}
+        </div>
+
+        <button id="btn-go-home" onClick={goToStart}
+          className="w-full py-4 rounded-xl font-semibold shadow-lg transition-all duration-200 active:scale-95 animate-fade-in-up-delay-4 bg-primary text-white hover:bg-primary-hover hover:shadow-xl">
+          Ir al inicio
+        </button>
+      </div>
+    );
+  }
+
+  // ─── Error screen ──────────────────────────────────────────────────────────
+
+  if (isError) {
+    return (
+      <div className="px-4 pb-8 text-center">
+        <div className="flex flex-col items-center mb-8 animate-fade-in-up">
+          <div className="relative mb-5">
+            <div className="relative w-24 h-24 bg-red-100 rounded-full flex items-center justify-center shadow-2xl">
+              <svg className="w-12 h-12 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </div>
+          </div>
+          <h2 className="text-2xl font-bold text-heading mb-2">No se pudo registrar</h2>
+          <p className="text-body text-sm max-w-xs">
+            {(error as { message?: string })?.message ?? 'Ocurrió un error inesperado. Intenta de nuevo.'}
+          </p>
+        </div>
+
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-4 text-left mb-6 animate-fade-in-up">
+          <p className="text-sm font-semibold text-red-700 mb-1">No se pudo registrar la solicitud</p>
+          <p className="text-xs text-red-600">
+            {(error as { message?: string })?.message ?? 'Error desconocido. Intenta de nuevo.'}
+          </p>
+          <button
+            onClick={() => {
+              called.current = false;
+              submitLoan();
+            }}
+            className="mt-3 text-xs font-semibold text-red-700 underline hover:text-red-900"
+          >
+            Reintentar
+          </button>
+        </div>
+
+        <button id="btn-go-home" onClick={goToStart}
+          className="w-full py-4 rounded-xl font-semibold shadow-lg transition-all duration-200 active:scale-95 bg-primary text-white hover:bg-primary-hover hover:shadow-xl">
+          Volver al inicio
+        </button>
+      </div>
+    );
+  }
+
+  // ─── Pending screen ────────────────────────────────────────────────────────
+
+  return (
+    <div className="px-4 pb-8 text-center">
+      {/* Pending icon */}
+      <div className="flex flex-col items-center mb-8 animate-fade-in-up">
+        <div className="relative mb-5">
+          <div className="absolute inset-0 rounded-full bg-primary opacity-20 animate-ping" />
+          <div className="relative w-24 h-24 bg-primary rounded-full flex items-center justify-center shadow-2xl">
+            <svg className="w-12 h-12 text-white animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+          </div>
+        </div>
+        <h2 className="text-3xl font-bold text-heading mb-2 animate-fade-in-up-delay-1">Procesando…</h2>
+        <p className="text-body text-sm max-w-xs animate-fade-in-up-delay-2">
+          Registrando tu contrato en la blockchain de Polygon…
+        </p>
       </div>
 
-      <button id="btn-go-home" onClick={goToStart} disabled={isPending}
-        className={`w-full py-4 rounded-xl font-semibold shadow-lg transition-all duration-200 active:scale-95 animate-fade-in-up-delay-4
-          ${isPending
-            ? 'bg-border-brand text-muted cursor-not-allowed'
-            : 'bg-primary text-white hover:bg-primary-hover hover:shadow-xl'
-          }`}>
-        {isPending ? 'Procesando…' : 'Ir al inicio'}
+      {/* Status badge */}
+      <div className="flex items-center justify-center gap-2 mb-6 animate-fade-in-up-delay-2">
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold border bg-primary/5 border-primary/20 text-primary">
+          <div className="w-2 h-2 rounded-full animate-pulse bg-primary" />
+          Enviando a blockchain…
+        </div>
+      </div>
+
+      {/* Info cards — skeletons */}
+      <div className="space-y-3 mb-6 animate-fade-in-up-delay-3">
+        <div className="bg-surface border border-border-brand rounded-2xl p-4 text-left shadow-sm">
+          <p className="text-xs text-muted font-medium mb-1 uppercase tracking-wide">Número de solicitud</p>
+          <SkeletonLine width="w-40" height="h-6" className="mt-1" />
+        </div>
+        <SkeletonTxCard />
+      </div>
+
+      <button disabled
+        className="w-full py-4 rounded-xl font-semibold shadow-lg transition-all duration-200 animate-fade-in-up-delay-4 bg-border-brand text-muted cursor-not-allowed">
+        Procesando…
       </button>
     </div>
   );
