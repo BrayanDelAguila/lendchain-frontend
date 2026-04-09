@@ -6,9 +6,9 @@ import NetworkBadge from './ui/NetworkBadge';
 import { SkeletonTxCard, SkeletonLine } from './ui/Skeleton';
 
 export default function Step5Confirmation(): React.ReactElement {
-  const { loanId, txHash, contractAddress, goToStart, applicant } = useLoan();
+  const { goToStart, applicant } = useLoan();
   const { toast } = useToast();
-  const { mutate: submitLoan, isPending, isError, isSuccess, error } = useLoanSubmit();
+  const { mutate: submitLoan, isPending, isError, isSuccess, error, data } = useLoanSubmit();
   const called = useRef(false);
 
   useEffect(() => {
@@ -27,11 +27,16 @@ export default function Step5Confirmation(): React.ReactElement {
     }
   }, [isError, error, toast]);
 
-  // Wait for context to be populated with real backend data
-  const isComplete = isSuccess && loanId !== '';
-  const isRealHash = txHash.startsWith('0x') && txHash.length === 66 && !txHash.startsWith('0x_stub');
-  const polygonscanUrl = isRealHash ? `https://amoy.polygonscan.com/tx/${txHash}` : null;
-  const shortHash = txHash ? `${txHash.slice(0, 6)}...${txHash.slice(-4)}` : '';
+  // Datos directamente del response — sin depender del timing del contexto
+  const loanIdLocal = data?.data?.id ?? '';
+  const txHashLocal = data?.data?.deploy_tx_hash ?? '';
+  const contractAddressLocal = data?.data?.contract_address ?? '';
+
+  // isComplete basado en data del hook, no del contexto
+  const isComplete = isSuccess && !!data;
+  const isRealHash = txHashLocal.startsWith('0x') && txHashLocal.length === 66 && !txHashLocal.startsWith('0x_stub');
+  const polygonscanUrl = isRealHash ? `https://amoy.polygonscan.com/tx/${txHashLocal}` : null;
+  const shortHash = txHashLocal ? `${txHashLocal.slice(0, 6)}...${txHashLocal.slice(-4)}` : '';
 
   // ─── Success screen ────────────────────────────────────────────────────────
 
@@ -69,7 +74,7 @@ export default function Step5Confirmation(): React.ReactElement {
           {/* Loan ID */}
           <div className="bg-surface border border-border-brand rounded-2xl p-4 text-left shadow-sm">
             <p className="text-xs text-muted font-medium mb-1 uppercase tracking-wide">Número de solicitud</p>
-            <p className="text-xl font-bold text-heading tracking-wide font-mono">{loanId}</p>
+            <p className="text-xl font-bold text-heading tracking-wide font-mono">{loanIdLocal}</p>
           </div>
 
           {/* TX Hash */}
@@ -83,7 +88,7 @@ export default function Step5Confirmation(): React.ReactElement {
                   Hash de transacción · Polygon Amoy
                 </p>
                 <p className="text-base font-mono font-bold text-primary break-all">{shortHash || '—'}</p>
-                {txHash && <p className="text-xs text-muted font-mono mt-1 truncate">{txHash}</p>}
+                {txHashLocal && <p className="text-xs text-muted font-mono mt-1 truncate">{txHashLocal}</p>}
               </div>
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: '#F0EBFF', color: '#7B3FE4' }}>
@@ -93,7 +98,7 @@ export default function Step5Confirmation(): React.ReactElement {
                 </div>
               </div>
             </div>
-            {txHash && (
+            {txHashLocal && (
               isRealHash ? (
                 <a id="polygonscan-link" href={polygonscanUrl ?? '#'} target="_blank" rel="noopener noreferrer"
                   className="mt-3 flex items-center gap-2 text-xs text-primary font-semibold hover:text-primary-hover transition-colors">
@@ -111,10 +116,10 @@ export default function Step5Confirmation(): React.ReactElement {
           </div>
 
           {/* Contract address */}
-          {contractAddress && (
+          {contractAddressLocal && (
             <div className="bg-surface border border-border-brand rounded-2xl p-4 text-left shadow-sm">
               <p className="text-xs text-muted font-medium mb-1 uppercase tracking-wide">Contrato desplegado</p>
-              <p className="text-xs font-mono font-semibold break-all" style={{ color: '#7B3FE4' }}>{contractAddress}</p>
+              <p className="text-xs font-mono font-semibold break-all" style={{ color: '#7B3FE4' }}>{contractAddressLocal}</p>
             </div>
           )}
 
