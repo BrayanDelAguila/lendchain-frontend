@@ -33,7 +33,7 @@ export default function Step5Confirmation(): React.ReactElement {
   const contractAddressLocal = data?.data?.contract_address ?? '';
 
   // isComplete basado en data del hook, no del contexto
-  const isComplete = isSuccess && !!data;
+  const isComplete = isSuccess && !!data?.data?.id;
   const isRealHash = txHashLocal.startsWith('0x') && txHashLocal.length === 66 && !txHashLocal.startsWith('0x_stub');
   const polygonscanUrl = isRealHash ? `https://amoy.polygonscan.com/tx/${txHashLocal}` : null;
   const shortHash = txHashLocal ? `${txHashLocal.slice(0, 6)}...${txHashLocal.slice(-4)}` : '';

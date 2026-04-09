@@ -15,9 +15,15 @@ interface LoanData {
   id: string;
   deploy_tx_hash: string;
   contract_address: string;
+  amount_usdc: string;
+  term_months: number;
+  monthly_payment: string;
+  status: string;
+  network: string;
 }
 
 interface LoanResponse {
+  success: boolean;
   data: LoanData;
 }
 
@@ -45,8 +51,8 @@ export function useLoanSubmit() {
         purpose: applicant.purpose || undefined,
       };
 
-      const { data } = await api.post<LoanResponse>('/api/v1/loans', payload);
-      return data;
+      const response = await api.post<LoanResponse>('/api/v1/loans', payload);
+      return response.data; // LoanResponse { success, data: LoanData }
     },
 
     onSuccess: (data) => {
