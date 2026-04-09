@@ -79,26 +79,26 @@ export function LoanProvider({ children }: { children: React.ReactNode }) {
 
   const loginOrRegister = async (email: string, password: string): Promise<void> => {
     try {
-      const { data } = await api.post<{ data: { access_token: string } }>(
+      const { data } = await api.post<{ data: { access_token: string; refresh_token: string } }>(
         '/api/v1/users/login', { email, password }
       );
-      const token = data.data.access_token;
-      localStorage.setItem('lendchain_jwt', token);
-      setAccessToken(token);
+      localStorage.setItem('lendchain_jwt', data.data.access_token);
+      localStorage.setItem('lendchain_refresh_token', data.data.refresh_token);
+      setAccessToken(data.data.access_token);
     } catch (loginErr: unknown) {
       const loginError = loginErr as ApiError;
       if (loginError.code === 'UNAUTHORIZED' || loginError.code?.startsWith('HTTP_401')) {
         try {
-          const { data } = await api.post<{ data: { access_token: string } }>(
+          const { data } = await api.post<{ data: { access_token: string; refresh_token: string } }>(
             '/api/v1/users/register', {
               email,
               password,
               full_name: email.split('@')[0],
             }
           );
-          const token = data.data.access_token;
-          localStorage.setItem('lendchain_jwt', token);
-          setAccessToken(token);
+          localStorage.setItem('lendchain_jwt', data.data.access_token);
+          localStorage.setItem('lendchain_refresh_token', data.data.refresh_token);
+          setAccessToken(data.data.access_token);
         } catch (registerErr: unknown) {
           const regError = registerErr as ApiError;
           if (regError.code === 'VALIDATION_ERROR' || regError.code?.startsWith('HTTP_422')) {
