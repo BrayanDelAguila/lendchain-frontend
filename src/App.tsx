@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { LoanProvider, useLoan } from './context/LoanContext';
 import Stepper from './components/Stepper';
 import Step1Amount from './components/Step1Amount';
@@ -7,11 +7,18 @@ import Step3Applicant from './components/Step3Applicant';
 import Step4Contract from './components/Step4Contract';
 import Step5Confirmation from './components/Step5Confirmation';
 import AuthGate from './components/ui/AuthGate';
+import LenderExplore from './components/lender/LenderExplore';
+import LenderPortfolio from './components/lender/LenderPortfolio';
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+type AppMode = 'borrow' | 'lend' | 'portfolio';
 
 // ─── Step router ──────────────────────────────────────────────────────────────
 
 function LoanFlow(): React.ReactElement {
   const { currentStep, isAuthenticated } = useLoan();
+  const [mode, setMode] = useState<AppMode>('borrow');
 
   if (!isAuthenticated) {
     return <AuthGate onAuth={() => {}} />;
@@ -42,7 +49,9 @@ function LoanFlow(): React.ReactElement {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-xs text-muted font-medium">Paso {currentStep} de 5</span>
+            {mode === 'borrow' && (
+              <span className="text-xs text-muted font-medium">Paso {currentStep} de 5</span>
+            )}
             <button
               onClick={() => {
                 localStorage.removeItem('lendchain_jwt');
@@ -55,12 +64,36 @@ function LoanFlow(): React.ReactElement {
             </button>
           </div>
         </div>
-        <Stepper />
+
+        {/* Mode navigation */}
+        <nav className="flex border-t border-border-brand">
+          {([
+            { key: 'borrow',    label: 'Pedir préstamo' },
+            { key: 'lend',      label: 'Explorar' },
+            { key: 'portfolio', label: 'Mi portfolio' },
+          ] as { key: AppMode; label: string }[]).map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => setMode(key)}
+              className={`flex-1 py-2 text-xs font-semibold transition-colors
+                ${mode === key
+                  ? 'text-primary border-b-2 border-primary'
+                  : 'text-muted hover:text-body'
+                }`}
+            >
+              {label}
+            </button>
+          ))}
+        </nav>
+
+        {mode === 'borrow' && <Stepper />}
       </header>
 
       {/* Main */}
       <main className="w-full max-w-md flex-1 pt-4">
-        <div key={currentStep}>{steps[currentStep]}</div>
+        {mode === 'borrow' && <div key={currentStep}>{steps[currentStep]}</div>}
+        {mode === 'lend' && <LenderExplore />}
+        {mode === 'portfolio' && <LenderPortfolio />}
       </main>
 
       {/* Footer */}
