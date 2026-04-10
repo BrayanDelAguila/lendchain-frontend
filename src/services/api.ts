@@ -11,7 +11,7 @@ export interface ApiError {
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:8080',
-  timeout: 30_000,
+  timeout: 90_000,
   withCredentials: false,
   headers: {
     'Content-Type': 'application/json',
