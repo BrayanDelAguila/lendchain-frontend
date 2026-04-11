@@ -110,7 +110,7 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps): React.React
               />
               <StatCard
                 label="Activos"
-                value={stats?.borrower.active_loans ?? 0}
+                value={stats?.borrower.funded_loans ?? 0}
                 sub={`${stats?.borrower.pending_loans ?? 0} pendientes`}
               />
               <StatCard

@@ -45,7 +45,7 @@ export interface PaginatedHistory {
 export interface UserStats {
   borrower: {
     total_loans: number;
-    active_loans: number;
+    funded_loans: number;
     pending_loans: number;
     total_borrowed_usdc: string;
   };
