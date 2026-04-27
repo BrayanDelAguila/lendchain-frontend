@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useLoanHistory } from '../hooks/useLoanHistory';
 import type { LoanHistoryItem } from '../types/loan';
+import PayInstallmentModal from './PayInstallmentModal';
 
 const AMOY_BASE = 'https://amoy.polygonscan.com/tx/';
 
@@ -67,9 +68,16 @@ function TxLink({ hash, label }: { hash: string | null; label: string }) {
   );
 }
 
-function HistoryCard({ item }: { item: LoanHistoryItem }) {
+function HistoryCard({
+  item,
+  onPay,
+}: {
+  item: LoanHistoryItem;
+  onPay: (id: string, monthly: string) => void;
+}) {
   const amount = parseFloat(item.amount_usdc);
   const isLender = item.role === 'lender';
+  const canPay = !isLender && item.status === 'FUNDED';
 
   return (
     <div className="bg-surface border border-border-brand rounded-xl p-4 space-y-3">
@@ -119,12 +127,23 @@ function HistoryCard({ item }: { item: LoanHistoryItem }) {
           <TxLink hash={item.fund_tx_hash} label="Fondeo" />
         </div>
       )}
+
+      {/* Pay button */}
+      {canPay && (
+        <button
+          onClick={() => onPay(item.id, item.monthly_payment)}
+          className="w-full mt-1 bg-primary text-white text-sm font-semibold py-2.5 rounded-lg hover:bg-primary-hover transition-all active:scale-95"
+        >
+          Pagar cuota
+        </button>
+      )}
     </div>
   );
 }
 
 export default function HistoryScreen(): React.ReactElement {
   const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } = useLoanHistory();
+  const [payModal, setPayModal] = useState<{ loanId: string; monthly: string } | null>(null);
 
   const items = data?.pages.flatMap((p) => p.data) ?? [];
 
@@ -173,8 +192,20 @@ export default function HistoryScreen(): React.ReactElement {
       <h2 className="text-xl font-bold text-heading">Historial</h2>
 
       {items.map((item) => (
-        <HistoryCard key={item.id} item={item} />
+        <HistoryCard
+          key={item.id}
+          item={item}
+          onPay={(id, monthly) => setPayModal({ loanId: id, monthly })}
+        />
       ))}
+
+      {payModal && (
+        <PayInstallmentModal
+          loanId={payModal.loanId}
+          monthlyPayment={payModal.monthly}
+          onClose={() => setPayModal(null)}
+        />
+      )}
 
       {hasNextPage && (
         <button

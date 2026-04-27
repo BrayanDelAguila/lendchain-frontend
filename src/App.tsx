@@ -11,16 +11,20 @@ import LenderExplore from './components/lender/LenderExplore';
 import LenderPortfolio from './components/lender/LenderPortfolio';
 import HomeScreen from './components/HomeScreen';
 import HistoryScreen from './components/HistoryScreen';
+import AdminPanel from './components/admin/AdminPanel';
+import { useMe } from './hooks/useMe';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type AppMode = 'home' | 'borrow' | 'lend' | 'portfolio' | 'history';
+type AppMode = 'home' | 'borrow' | 'lend' | 'portfolio' | 'history' | 'admin';
 
 // ─── Step router ──────────────────────────────────────────────────────────────
 
 function LoanFlow(): React.ReactElement {
   const { currentStep, isAuthenticated } = useLoan();
   const [mode, setMode] = useState<AppMode>('home');
+  const { data: me } = useMe();
+  const isAdmin = me?.role === 'ADMIN';
 
   if (!isAuthenticated) {
     return <AuthGate onAuth={() => {}} />;
@@ -33,6 +37,15 @@ function LoanFlow(): React.ReactElement {
     4: <Step4Contract />,
     5: <Step5Confirmation />,
   };
+
+  const navItems: { key: AppMode; label: string }[] = [
+    { key: 'home', label: 'Inicio' },
+    { key: 'borrow', label: 'Solicitar' },
+    { key: 'lend', label: 'Explorar' },
+    { key: 'portfolio', label: 'Portfolio' },
+    { key: 'history', label: 'Historial' },
+    ...(isAdmin ? [{ key: 'admin' as AppMode, label: 'Admin' }] : []),
+  ];
 
   return (
     <div className="min-h-screen flex flex-col items-center" style={{ background: 'var(--color-bg)' }}>
@@ -69,13 +82,7 @@ function LoanFlow(): React.ReactElement {
 
         {/* Mode navigation */}
         <nav className="flex border-t border-border-brand overflow-x-auto">
-          {([
-            { key: 'home',      label: 'Inicio' },
-            { key: 'borrow',    label: 'Solicitar' },
-            { key: 'lend',      label: 'Explorar' },
-            { key: 'portfolio', label: 'Portfolio' },
-            { key: 'history',   label: 'Historial' },
-          ] as { key: AppMode; label: string }[]).map(({ key, label }) => (
+          {navItems.map(({ key, label }) => (
             <button
               key={key}
               onClick={() => setMode(key)}
@@ -91,7 +98,6 @@ function LoanFlow(): React.ReactElement {
         </nav>
 
         {mode === 'borrow' && <Stepper />}
-
       </header>
 
       {/* Main */}
@@ -101,6 +107,7 @@ function LoanFlow(): React.ReactElement {
         {mode === 'lend' && <LenderExplore />}
         {mode === 'portfolio' && <LenderPortfolio />}
         {mode === 'history' && <HistoryScreen />}
+        {mode === 'admin' && isAdmin && <AdminPanel />}
       </main>
 
       {/* Footer */}
