@@ -9,16 +9,18 @@ import Step5Confirmation from './components/Step5Confirmation';
 import AuthGate from './components/ui/AuthGate';
 import LenderExplore from './components/lender/LenderExplore';
 import LenderPortfolio from './components/lender/LenderPortfolio';
+import HomeScreen from './components/HomeScreen';
+import HistoryScreen from './components/HistoryScreen';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type AppMode = 'borrow' | 'lend' | 'portfolio';
+type AppMode = 'home' | 'borrow' | 'lend' | 'portfolio' | 'history';
 
 // ─── Step router ──────────────────────────────────────────────────────────────
 
 function LoanFlow(): React.ReactElement {
   const { currentStep, isAuthenticated } = useLoan();
-  const [mode, setMode] = useState<AppMode>('borrow');
+  const [mode, setMode] = useState<AppMode>('home');
 
   if (!isAuthenticated) {
     return <AuthGate onAuth={() => {}} />;
@@ -66,16 +68,18 @@ function LoanFlow(): React.ReactElement {
         </div>
 
         {/* Mode navigation */}
-        <nav className="flex border-t border-border-brand">
+        <nav className="flex border-t border-border-brand overflow-x-auto">
           {([
-            { key: 'borrow',    label: 'Pedir préstamo' },
+            { key: 'home',      label: 'Inicio' },
+            { key: 'borrow',    label: 'Solicitar' },
             { key: 'lend',      label: 'Explorar' },
-            { key: 'portfolio', label: 'Mi portfolio' },
+            { key: 'portfolio', label: 'Portfolio' },
+            { key: 'history',   label: 'Historial' },
           ] as { key: AppMode; label: string }[]).map(({ key, label }) => (
             <button
               key={key}
               onClick={() => setMode(key)}
-              className={`flex-1 py-2 text-xs font-semibold transition-colors
+              className={`flex-1 py-2 text-xs font-semibold transition-colors whitespace-nowrap
                 ${mode === key
                   ? 'text-primary border-b-2 border-primary'
                   : 'text-muted hover:text-body'
@@ -87,13 +91,16 @@ function LoanFlow(): React.ReactElement {
         </nav>
 
         {mode === 'borrow' && <Stepper />}
+
       </header>
 
       {/* Main */}
       <main className="w-full max-w-md flex-1 pt-4">
+        {mode === 'home' && <HomeScreen onNavigate={setMode} />}
         {mode === 'borrow' && <div key={currentStep}>{steps[currentStep]}</div>}
         {mode === 'lend' && <LenderExplore />}
         {mode === 'portfolio' && <LenderPortfolio />}
+        {mode === 'history' && <HistoryScreen />}
       </main>
 
       {/* Footer */}

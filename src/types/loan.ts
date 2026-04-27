@@ -31,3 +31,28 @@ export interface FundLoanResponse {
   data: LoanPublic;
   tx_url: string;
 }
+
+export interface LoanHistoryItem extends LoanPublic {
+  role: 'borrower' | 'lender';
+}
+
+export interface PaginatedHistory {
+  success: boolean;
+  data: LoanHistoryItem[];
+  next_cursor: string | null;
+}
+
+export interface UserStats {
+  borrower: {
+    total_loans: number;
+    funded_loans: number;
+    pending_loans: number;
+    total_borrowed_usdc: string;
+  };
+  lender: {
+    total_investments: number;
+    active_investments: number;
+    total_invested_usdc: string;
+    total_interest_earned_usdc: string;
+  };
+}
